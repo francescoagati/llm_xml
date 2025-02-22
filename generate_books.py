@@ -66,24 +66,11 @@ def process_content(content: str, pipeline: List[Callable]) -> Any:
 
 @log_decorator
 def generate_books_xml() -> None:
-    prompt = """
-    Generate an XML document that represents a list of books.
-    Each book should contain the following elements: title, author, publication_year, genre, and ISBN.
-    The root element should be <booklist>, and each book should be nested within a <book> tag.
-    Ensure proper XML formatting and structure.
-    """
-    
+
+    question = 'a list of buddhist books'
+    response = get_xml_books(question)
+
     try:
-        messages = [
-            {'role': role, 'content': content}
-            for role, content in [
-                ('system', prompt),
-                ('user', 'a list of buddhist books')
-            ]
-        ]
-        
-        response: ChatResponse = chat(model='llama3.2', messages=messages)
-        
         result = process_content(
             response.message.content,
             [clean_xml_content, extract_xml_content, parse_books_xml]
@@ -94,6 +81,29 @@ def generate_books_xml() -> None:
     except Exception as e:
         logging.error(f"Error occurred: {str(e)}")
         sys.exit(1)
+
+def get_xml_books(question):
+    prompt = """
+    Generate an XML document that represents a list of books.
+    Each book should contain the following elements: title, author, publication_year, genre, and ISBN.
+    The root element should be <booklist>, and each book should be nested within a <book> tag.
+    Ensure proper XML formatting and structure.
+    """
+    
+    messages = [
+            {'role': role, 'content': content}
+            for role, content in [
+                ('system', prompt),
+                ('user', question)
+            ]
+        ]
+
+    model = 'llama3.2:1b'
+    try:
+        response: ChatResponse = chat(model=model, messages=messages)
+    except Exception as e:
+        logging.error(f"Error occurred: {str(e)}")
+    return response
 
 if __name__ == "__main__":
     generate_books_xml()
